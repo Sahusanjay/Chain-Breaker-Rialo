@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chain Breaker - Rialo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #111;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+      color: white;
+      text-align: center;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 24px;
+      color: #0f0;
+    }
+    #gameOver {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 32px;
+      color: #f00;
+      background: rgba(0,0,0,0.8);
+      padding: 20px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <canvas id="gameCanvas"></canvas>
+  <div id="gameOver">
+    <p>Old Chains locked you in 😅</p>
+    <button onclick="restartGame()">Try Again, Giga Chad!</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let chains = [];
+    let score = 0;
+    let lives = 3;
+    let gameOver = false;
+
+    function randomChain() {
+      return {
+        x: Math.random() * (canvas.width - 60),
+        y: -50,
+        width: 60,
+        height: 20,
+        speed: 2 + Math.random() * 3,
+        broken: false
+      };
+    }
+
+    function drawChain(chain) {
+      ctx.fillStyle = chain.broken ? '#0f0' : '#aaa';
+      ctx.fillRect(chain.x, chain.y, chain.width, chain.height);
+    }
+
+    function gameLoop() {
+      if (gameOver) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      chains.forEach((chain, i) => {
+        if (!chain.broken) {
+          chain.y += chain.speed;
+          drawChain(chain);
+          if (chain.y > canvas.height) {
+            chains.splice(i, 1);
+            lives--;
+            if (lives <= 0) endGame();
+          }
+        }
+      });
+
+      if (Math.random() < 0.03) {
+        chains.push(randomChain());
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    canvas.addEventListener('click', (e) => {
+      chains.forEach((chain) => {
+        if (!chain.broken && e.clientX > chain.x && e.clientX < chain.x + chain.width && e.clientY > chain.y && e.clientY < chain.y + chain.height) {
+          chain.broken = true;
+          score += 10;
+          document.getElementById('score').textContent = 'Score: ' + score;
+        }
+      });
+    });
+
+    function endGame() {
+      gameOver = true;
+      document.getElementById('gameOver').style.display = 'block';
+    }
+
+    function restartGame() {
+      chains = [];
+      score = 0;
+      lives = 3;
+      gameOver = false;
+      document.getElementById('score').textContent = 'Score: 0';
+      document.getElementById('gameOver').style.display = 'none';
+      gameLoop();
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>
